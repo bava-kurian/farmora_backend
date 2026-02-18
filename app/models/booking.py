@@ -23,6 +23,9 @@ class BookingCreate(BaseModel):
     start_time: datetime
     end_time: datetime
 
+class BookingCreateByMobile(BookingCreate):
+    mobile_number: str
+
 class BookingDB(BookingBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.now)
