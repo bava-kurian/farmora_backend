@@ -9,7 +9,7 @@ class UserRole(str, Enum):
 
 class UserBase(BaseModel):
     name: str = Field(..., min_length=2)
-    phone: str = Field(..., min_length=10)
+    mobile_number: str = Field(..., min_length=10)
     role: UserRole
     location: Optional[Location] = None
 
@@ -18,7 +18,7 @@ class UserCreate(UserBase):
 
 class UserDB(UserBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    password_hash: str
+    password_hash: Optional[str] = "mock_hash"
 
     class Config:
         populate_by_name = True
