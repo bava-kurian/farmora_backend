@@ -18,21 +18,32 @@ async def get_current_user(x_user_phone: Optional[str] = Header(None, alias="X-U
     db = get_db()
     
 
-    mobile_number = x_user_phone if x_user_phone else "9999999999"
-    
+    if not x_user_phone:
+        # Fallback for testing/hackathon mode without header
+        mobile_number = "9999999999"
+    else:
+        mobile_number = x_user_phone
+
     user = await db["users"].find_one({"mobile_number": mobile_number})
     
     if user is None:
-        # Auto-create mock user if it doesn't exist
-        mock_user = {
-            "name": "Hackathon User",
-            "mobile_number": mobile_number,
-            "role": UserRole.OWNER if mobile_number == "9999999999" else UserRole.RENTER,
-            "password_hash": "mock_hash",
-            "location": {"type": "Point", "coordinates": [0.0, 0.0]}
-        }
-        await db["users"].insert_one(mock_user)
-        user = await db["users"].find_one({"mobile_number": mobile_number})
+        if mobile_number == "9999999999":
+             # Auto-create ONLY the default mock user if it doesn't exist
+            mock_user = {
+                "name": "Hackathon User",
+                "mobile_number": mobile_number,
+                "role": UserRole.OWNER,
+                "password_hash": "mock_hash",
+                "location": {"type": "Point", "coordinates": [0.0, 0.0]}
+            }
+            await db["users"].insert_one(mock_user)
+            user = await db["users"].find_one({"mobile_number": mobile_number})
+        else:
+             # Genuine access attempt with non-existent user
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not registered. Please register first.",
+            )
         
     return UserDB(**user)
 

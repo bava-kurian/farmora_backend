@@ -1,45 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
-from app.auth import get_password_hash, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
-from app.models.user import UserCreate, UserResponse, UserDB, Location
+from fastapi import APIRouter, Depends, HTTPException, Body
+from app.auth import get_current_user
+from app.models.user import UserRegister, UserResponse, UserDB, UserProfileUpdate, UserCropsUpdate, UserRole
 from database import get_db
 
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
-async def register(user: UserCreate):
+async def register(user_data: UserRegister):
     db = get_db()
-    existing_user = await db["users"].find_one({"phone": user.phone})
+    existing_user = await db["users"].find_one({"mobile_number": user_data.mobile_number})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Phone number already registered")
+        return UserDB(**existing_user)
     
-    user_dict = user.dict()
-    user_dict["password_hash"] = get_password_hash(user_dict.pop("password"))
+    new_user_dict = {
+        "mobile_number": user_data.mobile_number,
+        "name": None,
+        "role": None,
+        "location": None,
+        "acres_land": None,
+        "years_experience": None,
+        "crops_rotation": []
+    }
     
-    # Ensure location is properly formatted if provided
-    if user_dict.get("location"):
-         user_dict["location"]["type"] = "Point"
-    
-    new_user = await db["users"].insert_one(user_dict)
-    created_user = await db["users"].find_one({"_id": new_user.inserted_id})
+    result = await db["users"].insert_one(new_user_dict)
+    created_user = await db["users"].find_one({"_id": result.inserted_id})
     return UserDB(**created_user)
 
-@router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+@router.post("/updateprofile", response_model=UserResponse)
+async def update_profile(
+    profile_data: UserProfileUpdate,
+    current_user: UserDB = Depends(get_current_user)
+):
     db = get_db()
-    user = await db["users"].find_one({"phone": form_data.username}) # Using phone as username
-    if not user or not verify_password(form_data.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect phone number or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    
+    update_data = {k: v for k, v in profile_data.dict().items() if v is not None}
+    
+    if update_data:
+        # Check if id needs to be objectId
+        await db["users"].update_one(
+            {"_id": current_user.id}, # PyObjectId fits here
+            {"$set": update_data}
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user["phone"]}, expires_delta=access_token_expires
+        
+    updated_user = await db["users"].find_one({"_id": current_user.id})
+    return UserDB(**updated_user)
+
+@router.post("/updatecrops", response_model=UserResponse)
+async def update_crops(
+    crops_data: UserCropsUpdate,
+    current_user: UserDB = Depends(get_current_user)
+):
+    db = get_db()
+    await db["users"].update_one(
+        {"_id": current_user.id},
+        {"$set": {"crops_rotation": crops_data.crops_rotation}}
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    updated_user = await db["users"].find_one({"_id": current_user.id})
+    return UserDB(**updated_user)
 
 @router.get("/users/me", response_model=UserResponse)
 async def read_users_me(current_user: UserDB = Depends(get_current_user)):

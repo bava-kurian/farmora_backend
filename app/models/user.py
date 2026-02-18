@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from app.models.shared import PyObjectId, Location
 from enum import Enum
 
@@ -8,17 +8,28 @@ class UserRole(str, Enum):
     RENTER = "renter"
 
 class UserBase(BaseModel):
-    name: str = Field(..., min_length=2)
-    mobile_number: str = Field(..., min_length=10)
-    role: UserRole
+    mobile_number: str = Field(..., description="User's phone number")
+    name: Optional[str] = None
+    role: Optional[UserRole] = None
     location: Optional[Location] = None
+    acres_land: Optional[float] = None
+    years_experience: Optional[int] = None
+    crops_rotation: Optional[List[str]] = Field(default_factory=list)
 
-class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+class UserRegister(BaseModel):
+    mobile_number: str
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    acres_land: Optional[float] = None
+    years_experience: Optional[int] = None
+
+class UserCropsUpdate(BaseModel):
+    crops_rotation: List[str]
 
 class UserDB(UserBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    password_hash: str
+    password_hash: Optional[str] = None
 
     class Config:
         populate_by_name = True
