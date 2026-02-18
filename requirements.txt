@@ -3,3 +3,7 @@ uvicorn
 python-dotenv
 motor
 dnspython
+pydantic[email]
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
