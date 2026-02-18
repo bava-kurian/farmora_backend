@@ -93,14 +93,13 @@ async def create_booking_by_mobile(booking: BookingCreateByMobile):
     db = get_db()
     
     # 0. Find User by Mobile
-    # Assuming mobile number is stored in 'phone' field of user collection
-    user = await db["users"].find_one({"phone": booking.mobile_number})
+    user = await db["users"].find_one({"mobile_number": booking.mobile_number})
     
     if not user:
         # Auto-create user
         new_user = {
             "name": f"Guest {booking.mobile_number}",
-            "phone": booking.mobile_number,
+            "mobile_number": booking.mobile_number,
             "role": UserRole.RENTER,
             "password_hash": "mock_hash_123456", # In a real app, use proper hashing
             "location": None
@@ -164,5 +163,37 @@ async def list_booked_equipment():
     bookings = await db["bookings"].find({
         "status": {"$in": ["pending", "confirmed"]}
     }).to_list(length=100)
+    
+    return [BookingDB(**b) for b in bookings]
+
+@router.get("/incoming", response_model=List[BookingResponse])
+async def get_incoming_bookings(mobile_number: str):
+    db = get_db()
+    
+    # 1. Find user (owner)
+    # Using 'mobile_number' field for guests/owners registered via mobile
+    # or 'phone' if that was used. Let's assume mobile_number for consistency with equipment reg.
+    # We check both to be safe or stick to one convention. 
+    # In equipment reg we used 'mobile_number'.
+    
+    
+    user = await db["users"].find_one({"mobile_number": mobile_number})
+        
+    if not user:
+        return []
+
+    # 2. Find all equipment owned by this user
+    equipment_cursor = db["equipment"].find({"owner_id": str(user["_id"])})
+    user_equipments = await equipment_cursor.to_list(length=100)
+    
+    if not user_equipments:
+        return []
+        
+    equipment_ids = [eq["_id"] for eq in user_equipments]
+    
+    # 3. Find bookings for these equipment IDs
+    bookings = await db["bookings"].find({
+        "equipment_id": {"$in": equipment_ids}
+    }).sort("created_at", -1).to_list(length=100)
     
     return [BookingDB(**b) for b in bookings]

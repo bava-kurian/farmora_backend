@@ -97,10 +97,46 @@ async def get_nearby_equipment(
     equipments = await cursor.to_list(length=100)
     return [EquipmentDB(**eq) for eq in equipments]
 
+@router.get("/my-listings", response_model=List[EquipmentResponse])
+async def get_my_listings(mobile_number: str):
+    db = get_db()
+    user = await db["users"].find_one({"mobile_number": mobile_number})
+    if not user:
+        return []
+    
+    cursor = db["equipment"].find({"owner_id": str(user["_id"])})
+    equipments = await cursor.to_list(length=100)
+    return [EquipmentDB(**eq) for eq in equipments]
+
 @router.get("/{id}", response_model=EquipmentResponse)
 async def get_equipment(id: str):
     db = get_db()
-    equipment = await db["equipment"].find_one({"_id": ObjectId(id)})
+    try:
+        oid = ObjectId(id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+        
+    equipment = await db["equipment"].find_one({"_id": oid})
     if not equipment:
         raise HTTPException(status_code=404, detail="Equipment not found")
     return EquipmentDB(**equipment)
+
+@router.delete("/{id}", response_model=bool)
+async def delete_equipment(id: str, mobile_number: str = Query(...)):
+    db = get_db()
+    
+    # Verify user exists
+    user = await db["users"].find_one({"mobile_number": mobile_number})
+    if not user:
+         raise HTTPException(status_code=404, detail="User not found")
+
+    # Verify equipment exists and belongs to user
+    equipment = await db["equipment"].find_one({"_id": ObjectId(id)})
+    if not equipment:
+        raise HTTPException(status_code=404, detail="Equipment not found")
+        
+    if equipment.get("owner_id") != str(user["_id"]):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this equipment")
+
+    result = await db["equipment"].delete_one({"_id": ObjectId(id)})
+    return result.deleted_count > 0

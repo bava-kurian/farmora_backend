@@ -17,21 +17,22 @@ async def get_current_user(x_user_phone: Optional[str] = Header(None, alias="X-U
     """
     db = get_db()
     
-    phone = x_user_phone if x_user_phone else "9999999999"
+
+    mobile_number = x_user_phone if x_user_phone else "9999999999"
     
-    user = await db["users"].find_one({"phone": phone})
+    user = await db["users"].find_one({"mobile_number": mobile_number})
     
     if user is None:
         # Auto-create mock user if it doesn't exist
         mock_user = {
             "name": "Hackathon User",
-            "phone": phone,
-            "role": UserRole.OWNER if phone == "9999999999" else UserRole.RENTER,
+            "mobile_number": mobile_number,
+            "role": UserRole.OWNER if mobile_number == "9999999999" else UserRole.RENTER,
             "password_hash": "mock_hash",
             "location": {"type": "Point", "coordinates": [0.0, 0.0]}
         }
         await db["users"].insert_one(mock_user)
-        user = await db["users"].find_one({"phone": phone})
+        user = await db["users"].find_one({"mobile_number": mobile_number})
         
     return UserDB(**user)
 

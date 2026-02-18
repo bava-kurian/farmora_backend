@@ -26,7 +26,7 @@ async def seed_data():
     print("Creating dummy users...")
     owner = {
         "name": "Ramesh Farmer",
-        "phone": "9876543210",
+        "mobile_number": "9876543210",
         "role": UserRole.OWNER,
         "password_hash": "dummy_hash",
         "location": {"type": "Point", "coordinates": [76.2673, 9.9312]} # Kochi
@@ -34,7 +34,7 @@ async def seed_data():
     
     renter = {
         "name": "Suresh Renter",
-        "phone": "9123456780",
+        "mobile_number": "9123456780",
         "role": UserRole.RENTER,
         "password_hash": "dummy_hash",
         "location": {"type": "Point", "coordinates": [76.2700, 9.9350]}

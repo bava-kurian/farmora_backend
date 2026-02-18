@@ -9,7 +9,7 @@ class UserRole(str, Enum):
 
 class UserBase(BaseModel):
     name: str = Field(..., min_length=2)
-    phone: str = Field(..., min_length=10)
+    mobile_number: str = Field(..., min_length=10)
     role: UserRole
     location: Optional[Location] = None
 
