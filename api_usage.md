@@ -67,6 +67,7 @@ Search for available equipment near a location.
 ### Get Equipment Details
 - **Endpoint**: `GET /uber/equipment/{id}`
 - **Path Param**: `id` (The equipment ID returned from search)
+- **Note**: The `images` field will contain Base64 encoded strings (Data URIs).
 
 ---
 
@@ -96,6 +97,26 @@ Confirm or cancel a booking.
 - **Endpoint**: `PATCH /uber/booking/status/{booking_id}`
 - **Query Param**: `status` (`confirmed`, `cancelled`, `completed`)
 - **Example**: `/uber/booking/status/BOOKING_ID?status=confirmed`
+
+- **Example**: `/uber/booking/status/BOOKING_ID?status=confirmed`
+
+### Create Booking by Mobile (Agent/Offline)
+Book equipment using a mobile number. If the user doesn't exist, a **Guest** user is automatically created.
+- **Endpoint**: `POST /uber/booking/create-by-mobile`
+- **Body**:
+```json
+{
+  "equipment_id": "EQUIPMENT_ID",
+  "start_time": "2023-10-27T10:00:00",
+  "end_time": "2023-10-27T14:00:00",
+  "mobile_number": "9876543210"
+}
+```
+
+### List All Booked Equipment
+List all equipment currently booked (pending or confirmed).
+- **Endpoint**: `GET /uber/booking/list-booked`
+- **Response**: List of booking objects.
 
 ---
 
