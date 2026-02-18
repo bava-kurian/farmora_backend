@@ -38,11 +38,11 @@ async def update_profile(
     if update_data:
         # Check if id needs to be objectId
         await db["users"].update_one(
-            {"_id": current_user.id}, # PyObjectId fits here
+            {"mobile_number": current_user.mobile_number}, # PyObjectId fits here
             {"$set": update_data}
         )
         
-    updated_user = await db["users"].find_one({"_id": current_user.id})
+    updated_user = await db["users"].find_one({"mobile_number": current_user.mobile_number})
     return UserDB(**updated_user)
 
 @router.post("/updatecrops", response_model=UserResponse)
@@ -52,11 +52,11 @@ async def update_crops(
 ):
     db = get_db()
     await db["users"].update_one(
-        {"_id": current_user.id},
+        {"mobile_number": current_user.mobile_number},
         {"$set": {"crops_rotation": crops_data.crops_rotation}}
     )
     
-    updated_user = await db["users"].find_one({"_id": current_user.id})
+    updated_user = await db["users"].find_one({"mobile_number": current_user.mobile_number})
     return UserDB(**updated_user)
 
 @router.get("/users/me", response_model=UserResponse)
