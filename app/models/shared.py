@@ -3,7 +3,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field, GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-class PyObjectId(str):
+class PyObjectId(ObjectId):
     @classmethod
     def __get_pydantic_core_schema__(
         cls, _source_type: Any, _handler: GetCoreSchemaHandler
@@ -18,6 +18,12 @@ class PyObjectId(str):
                 lambda x: str(x)
             ),
         )
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
 
 class Location(BaseModel):
     type: str = "Point"

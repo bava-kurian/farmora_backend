@@ -97,7 +97,11 @@ async def create_post(
         author_mobile=current_user.mobile_number
     )
     
-    result = await db["community_posts"].insert_one(new_post.dict(by_alias=True))
+    post_dict = new_post.dict(by_alias=True)
+    if "_id" in post_dict and isinstance(post_dict["_id"], str):
+        post_dict["_id"] = ObjectId(post_dict["_id"])
+        
+    result = await db["community_posts"].insert_one(post_dict)
     created_post = await db["community_posts"].find_one({"_id": result.inserted_id})
     created_post["is_owner"] = True
     return created_post
