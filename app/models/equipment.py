@@ -27,6 +27,9 @@ class EquipmentCreate(BaseModel):
     location_long: float
     images: List[str] = []
 
+class EquipmentCreateByMobile(EquipmentCreate):
+    mobile_number: str
+
 class EquipmentDB(EquipmentBase):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     rating: float = 0.0
