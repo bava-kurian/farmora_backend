@@ -98,8 +98,6 @@ Confirm or cancel a booking.
 - **Query Param**: `status` (`confirmed`, `cancelled`, `completed`)
 - **Example**: `/uber/booking/status/BOOKING_ID?status=confirmed`
 
-- **Example**: `/uber/booking/status/BOOKING_ID?status=confirmed`
-
 ### Create Booking by Mobile (Agent/Offline)
 Book equipment using a mobile number. If the user doesn't exist, a **Guest** user is automatically created.
 - **Endpoint**: `POST /uber/booking/create-by-mobile`

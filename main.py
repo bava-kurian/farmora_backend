@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from database import connect_to_mongo, close_mongo_connection, get_db
-from app.routers import harvest, equipment, booking
+from app.routers import harvest, equipment, booking, review
 
 load_dotenv()
 
@@ -28,6 +28,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(harvest.router)
 app.include_router(equipment.router)
 app.include_router(booking.router)
+app.include_router(review.router)
 
 @app.get("/")
 async def root():
